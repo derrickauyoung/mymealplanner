@@ -51,7 +51,7 @@ def add_cors_headers(response):
     # Ensure we return a concrete origin (cannot be '*' when credentials are used)
     response.headers['Access-Control-Allow-Origin'] = CORS_ALLOWED_ORIGIN
     response.headers['Vary'] = 'Origin'
-    response.headers['Access-Control-Allow-Methods'] = 'GET,POST,PUT,DELETE,OPTIONS'
+    response.headers['Access-Control-Allow-Methods'] = 'GET,POST,OPTIONS'
     response.headers['Access-Control-Allow-Headers'] = 'Content-Type,Authorization'
     response.headers['Access-Control-Allow-Credentials'] = 'true'
     return response
