@@ -27,7 +27,7 @@ jobs:
           rm -rf docs
           mkdir -p docs
 
-      - name: Optional: run frontend build if package.json exists
+      - name: Optional - run frontend build if package.json exists
         run: |
           if [ -f package.json ]; then
             # install node and build (adjust commands if your project uses pnpm/yarn)
