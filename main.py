@@ -39,19 +39,12 @@ from mymealplanner.agent_utils import run_session
 from mymealplanner.web_utils import parse_summary_to_structured_data
 
 app = Flask(__name__, static_folder='.', static_url_path='')
-CORS(
-    app,
-    resources={r"/*": {"origins": "https://derrickauyoung.github.io"}},
-    supports_credentials=False,
-    allow_headers=["Content-Type"],
-    methods=["GET", "POST", "OPTIONS"]
-)
 
 @app.after_request
 def add_cors_headers(response):
     response.headers["Access-Control-Allow-Origin"] = "https://derrickauyoung.github.io"
-    response.headers["Access-Control-Allow-Methods"] = "GET, POST, OPTIONS"]
-    response.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization"]
+    response.headers["Access-Control-Allow-Methods"] = "GET, POST, OPTIONS"
+    response.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization"
     return response
 
 @app.route('/', methods=['GET', 'OPTIONS'])
