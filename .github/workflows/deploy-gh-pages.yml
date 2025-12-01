@@ -1,3 +1,27 @@
+name: Build and publish docs
+
+on:
+  push:
+    branches: [ gh-pages ]
+    paths:
+      - 'templates/**'
+      - 'static/**'
+      - '.github/workflows/update-docs.yml'
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+          fetch-depth: 0
+  
   - name: Prepare docs directory
     run: |
       rm -rf docs
