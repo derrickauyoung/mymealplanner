@@ -66,8 +66,7 @@ def index():
 
 
 # SPA-safe catch-all: serve real static assets, otherwise return index.html
-@app.route('/', defaults={'path': ''})
-@app.route('/<path:path>', methods=['GET', 'OPTIONS'])
+@app.route('/path:path', methods=['GET','OPTIONS'])
 def serve_frontend(path):
     # Preflight
     if request.method == 'OPTIONS':
@@ -78,6 +77,8 @@ def serve_frontend(path):
     if path.startswith(app.static_url_path.lstrip('/')) or os.path.splitext(path)[1]:
         # normalize path to avoid directory traversal
         safe_path = path
+        if safe_path.startswith('..') or os.path.isabs(safe_path):
+            return jsonify({"error": "Invalid path"}), 400
         return send_from_directory(app.static_folder, safe_path)
 
     # If you have API routes under /api/*, make sure they are registered before this catch-all.
@@ -85,7 +86,7 @@ def serve_frontend(path):
     return render_template('index.html')
 
 
-@app.route('/health', methods=['GET'])
+@app.route('/health', methods=['GET', 'OPTIONS'])
 def health():
     """Health check endpoint."""
     if request.method == 'OPTIONS':
