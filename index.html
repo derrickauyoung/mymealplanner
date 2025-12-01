@@ -361,10 +361,10 @@
                 if (window.API_URL) return window.API_URL;
                 // Auto-detect localhost
                 if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-                    return 'http://localhost:8080/plan';
+                    return "http://localhost:8080/plan";
                 }
                 // Production URL - update this after deployment
-                return 'https://derrickauyoung.github.io/mymealplanner/plan';
+                return "https://derrickauyoung.github.io/mymealplanner/plan";
             };
             const API_URL = getApiUrl();
 
