@@ -109,6 +109,8 @@ SEARCH STRATEGY FOR VARIETY:
 
 9. Ensure the recipe_title contains the domain base address of the recipe source in parentheses.
 
+10. Do not accept "as needed" or "quantity" for ingredient quantities.
+
 Focus on getting diverse, interesting recipe titles from various sources.""",
     tools=[
         google_search,
@@ -148,8 +150,8 @@ CRITICAL FORMATTING RULES:
    
 3. Always add "+recipe" to the end of the search query
 
-4. Replace "Date, Day of Week" with the next day's actual date and day information, relative to the time of this query, \
-    for example "Dec-01, Monday" if the current date and time is November 30th 2025, 10:17 PM.
+4. Replace "(Date, Day of Week)" with the next day's actual date and day information, relative to the time of this query, \
+    for example "(Dec-01, Monday)" if the current date and time is November 30th 2025, 10:17 PM.
 
 5. Always replace domain.com with the recipe's actual source web page domain (e.g., "seriouseats.com")
 

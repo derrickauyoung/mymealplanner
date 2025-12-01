@@ -1,0 +1,331 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+}
+
+.container {
+    max-width: 1200px;
+    width: 100%;
+    background: white;
+    border-radius: 20px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    overflow: hidden;
+}
+
+.splash-screen {
+    text-align: center;
+    padding: 40px;
+}
+
+.splash-image {
+    max-width: 100%;
+    height: auto;
+    border-radius: 15px;
+    margin-bottom: 30px;
+}
+
+.prompt-section {
+    padding: 30px;
+    background: #f8f9fa;
+}
+
+.prompt-label {
+    display: block;
+    margin-bottom: 10px;
+    font-weight: 600;
+    color: #333;
+    font-size: 16px;
+}
+
+.prompt-textarea {
+    width: 100%;
+    min-height: 120px;
+    padding: 15px;
+    border: 2px solid #e0e0e0;
+    border-radius: 10px;
+    font-size: 16px;
+    font-family: inherit;
+    resize: vertical;
+    transition: border-color 0.3s;
+}
+
+.prompt-textarea:focus {
+    outline: none;
+    border-color: #667eea;
+}
+
+.plan-button {
+    width: 100%;
+    padding: 15px 30px;
+    margin-top: 20px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-size: 18px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.plan-button:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 20px rgba(102, 126, 234, 0.4);
+}
+
+.plan-button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.7);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.modal-content {
+    background: white;
+    padding: 40px;
+    border-radius: 15px;
+    max-width: 400px;
+    width: 90%;
+    text-align: center;
+}
+
+.progress-bar-container {
+    width: 100%;
+    height: 30px;
+    background: #e0e0e0;
+    border-radius: 15px;
+    overflow: hidden;
+    margin: 20px 0;
+}
+
+.progress-bar {
+    height: 100%;
+    background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+    width: 0%;
+    transition: width 0.3s;
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.7; }
+}
+
+.progress-text {
+    margin-top: 15px;
+    color: #666;
+    font-size: 16px;
+}
+
+.results-container {
+    padding: 30px;
+}
+
+.results-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+    padding-bottom: 20px;
+    border-bottom: 2px solid #e0e0e0;
+}
+
+.results-title {
+    font-size: 28px;
+    font-weight: 700;
+    color: #333;
+}
+
+.back-button {
+    padding: 10px 20px;
+    background: #667eea;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.back-button:hover {
+    background: #5568d3;
+}
+
+.tabs {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 30px;
+    border-bottom: 2px solid #e0e0e0;
+}
+
+.tab {
+    padding: 12px 24px;
+    background: none;
+    border: none;
+    border-bottom: 3px solid transparent;
+    cursor: pointer;
+    font-size: 16px;
+    font-weight: 600;
+    color: #666;
+    transition: all 0.3s;
+}
+
+.tab.active {
+    color: #667eea;
+    border-bottom-color: #667eea;
+}
+
+.tab:hover {
+    color: #667eea;
+}
+
+.tab-content {
+    display: none;
+}
+
+.tab-content.active {
+    display: block;
+}
+
+.day-section {
+    margin-bottom: 40px;
+    padding: 20px;
+    background: #f8f9fa;
+    border-radius: 10px;
+}
+
+.day-title {
+    font-size: 22px;
+    font-weight: 700;
+    color: #333;
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid #e0e0e0;
+}
+
+.meal-item {
+    margin-bottom: 15px;
+    padding: 15px;
+    background: white;
+    border-radius: 8px;
+    border-left: 4px solid #667eea;
+}
+
+.meal-type {
+    font-weight: 600;
+    color: #667eea;
+    text-transform: uppercase;
+    font-size: 12px;
+    margin-bottom: 5px;
+}
+
+.meal-title {
+    font-size: 16px;
+    color: #333;
+}
+
+.meal-link {
+    color: #667eea;
+    text-decoration: none;
+    font-weight: 600;
+}
+
+.meal-link:hover {
+    text-decoration: underline;
+}
+
+.ingredient-list {
+    list-style: none;
+}
+
+.ingredient-item {
+    padding: 6px;
+    margin-bottom: 4px;
+    background: white;
+    border-radius: 3px;
+    border-left: 2px solid #764ba2;
+    color: #2c5282;
+    display: flex;
+    align-items: center;
+    transition: all 0.2s ease;
+}
+
+.ingredient-item:hover {
+    background: #f0f8ff;
+    transform: translateX(2px);
+}
+
+.ingredient-item.checked {
+    opacity: 0.6;
+    background: #f5f5f5;
+}
+
+.ingredient-item input[type="checkbox"] {
+    margin-right: 10px;
+    cursor: pointer;
+    width: 18px;
+    height: 18px;
+    accent-color: #4a90e2;
+}
+
+.ingredient-item span {
+    flex: 1;
+}
+
+.recipe-item {
+    padding: 15px;
+    margin-bottom: 10px;
+    background: white;
+    border-radius: 8px;
+}
+
+.recipe-link {
+    color: #667eea;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 16px;
+}
+
+.recipe-link:hover {
+    text-decoration: underline;
+}
+
+.error-message {
+    background: #fee;
+    color: #c33;
+    padding: 15px;
+    border-radius: 8px;
+    margin: 20px 0;
+    border-left: 4px solid #c33;
+}
+
+.day-subtitle {
+    color: #5a6c7d;
+    font-size: 14px;
+    margin: -10px 0 15px 0;
+    font-style: italic;
+}
