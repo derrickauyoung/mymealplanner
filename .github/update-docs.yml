@@ -1,0 +1,87 @@
+name: Build and publish docs
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'templates/**'
+      - 'static/**'
+      - '.github/workflows/update-docs.yml'
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+          fetch-depth: 0
+
+      - name: Prepare docs directory
+        run: |
+          rm -rf docs
+          mkdir -p docs
+
+      - name: Optional - run frontend build if package.json exists
+        run: |
+          if [ -f package.json ]; then
+            # install node and build (adjust commands if your project uses pnpm/yarn)
+            curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -
+            sudo apt-get install -y nodejs
+            npm ci
+            if npm run | grep -q "build"; then
+              npm run build
+            fi
+            # If your build outputs to a dist/ or build/ directory, copy it into static/ or docs/ here.
+          else
+            echo "No package.json found — skipping build step"
+          fi
+
+      - name: Copy templates -> docs
+        run: |
+          # Copy all files from templates/ (index.html expected)
+          if [ -d templates ]; then
+            cp -a templates/. docs/
+          fi
+
+      - name: Copy static assets -> docs/static
+        run: |
+          mkdir -p docs/static
+          if [ -d static ]; then
+            cp -a static/. docs/static/ || true
+          fi
+
+      - name: Ensure base href for project pages
+        env:
+          REPO_NAME: ${{ github.event.repository.name }}
+        run: |
+          # Only run if docs/index.html exists
+          if [ -f docs/index.html ]; then
+            # Insert or replace <base href="...">
+            if grep -q "<base href=" docs/index.html; then
+              sed -i "s|<base href=\"[^\"]*\"|<base href=\"/${REPO_NAME}/\"|g" docs/index.html
+            else
+              sed -i "0,/<head>/ s|<head>|<head>\n  <base href=\"/${REPO_NAME}/\">|" docs/index.html
+            fi
+            # Copy index to 404 for SPA fallback on GitHub Pages
+            cp docs/index.html docs/404.html
+          fi
+
+      - name: Commit and push docs/
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add docs
+          if git diff --cached --quiet; then
+            echo "No docs changes to commit"
+          else
+            git commit -m "chore(docs): update docs from templates/static [skip ci]"
+            git push origin HEAD:main
+          fi
