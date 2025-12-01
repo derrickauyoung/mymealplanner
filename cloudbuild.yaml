@@ -31,7 +31,3 @@ steps:
 images:
   - 'gcr.io/$PROJECT_ID/mymealplanner'
 
-# Optional: Use substitutions for non-sensitive defaults
-substitutions:
-  _LOCATION: 'us-central1'
-
