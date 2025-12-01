@@ -11,8 +11,8 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy all application code
 COPY main.py .
 COPY mymealplanner/ ./mymealplanner/
-COPY index.html .
-COPY resources/ ./resources/
+COPY templates/ ./templates/
+COPY static/ ./static/
 
 # Set environment variables
 ENV PORT=8080

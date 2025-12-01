@@ -5,7 +5,7 @@ This can be deployed to Cloud Run or Cloud Functions.
 import json
 import os
 import asyncio
-from flask import Flask, request, jsonify, send_from_directory, send_file
+from flask import Flask, request, jsonify, send_from_directory, send_file, render_template
 from flask_cors import CORS
 import vertexai
 import re
@@ -36,9 +36,12 @@ from google.genai import types
 from mymealplanner.agent import root_agent
 
 from mymealplanner.agent_utils import run_session
-from mymealplanner.web_utils import parse_summary_to_structured_data
+from mymealplanner.parsing import parse_summary_to_structured_data
 
-app = Flask(__name__, static_folder='.', static_url_path='')
+app = Flask(__name__,
+            static_folder='static',
+            static_url_path='/static',
+            template_folder='templates')
 
 @app.after_request
 def add_cors_headers(response):
@@ -52,7 +55,7 @@ def index():
     """Serve the main index.html file."""
     if request.method == "OPTIONS":
         return ('', 204)
-    return jsonify(ok=True)
+    return render_template('index.html')
 
 @app.route('/<path:path>', methods=['GET', 'OPTIONS'])
 def serve_static(path):

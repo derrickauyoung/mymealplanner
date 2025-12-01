@@ -148,18 +148,32 @@ python test_local.py
 
 ```
 mymealplanner/
-├── mymealplanner/
-│   ├── agent.py          # Multi-agent definitions
-│   └── requirements.txt # Python dependencies
-├── main.py               # Flask API server
-├── index.html            # React frontend
-├── run_local.sh          # Local testing script (Mac/Linux)
-├── run_local.bat         # Local testing script (Windows)
-├── test_local.py         # Backend test script
-├── Dockerfile            # Container definition
-├── cloudbuild.yaml       # Cloud Build config
-├── app.yaml              # App Engine config (optional)
-└── DEPLOYMENT.md         # Detailed deployment guide
+├── main.py                          # Flask backend
+├── requirements.txt                 # Python dependencies
+├── Dockerfile                       # Container definition
+├── cloudbuild.yaml                  # Cloud Build config
+├── README.md
+├── run_local.sh                     # Local testing script (Mac/Linux)
+├── run_local.bat                    # Local testing script (Windows)
+├── test_local.py                    # Backend test script
+└── DEPLOYMENT.md                    # Detailed deployment guide
+│
+├── mymealplanner/                   # Python package
+│   ├── __init__.py
+│   ├── agent.py                     # Agent definitions
+│   ├── agent_utils.py               # Helper functions
+│   └── parsing.py                   # Parsing utilities
+│
+├── static/                          # Static frontend files
+│   ├── css/
+│   │   └── styles.css               # Main stylesheet
+│   ├── js/
+│   │   └── app.js                   # React app
+│   └── resources/
+│       └── MyMealPlanner.png        # Images
+│
+└── templates/
+    └── index.html                   # HTML template
 ```
 
 ## How It Works
