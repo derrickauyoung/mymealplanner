@@ -1,0 +1,56 @@
+  - name: Prepare docs directory
+    run: |
+      rm -rf docs
+      mkdir -p docs
+
+  - name: "Optional - run frontend build if package.json exists"
+    run: |
+      if [ -f package.json ]; then
+        # Install Node 18 and build. Adjust if you use yarn/pnpm or a different build command.
+        curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -
+        sudo apt-get install -y nodejs
+        npm ci
+        if npm run | grep -q "build"; then
+          npm run build
+          # If your build outputs to a specific dir (e.g. build/ or dist/), copy it into docs/ here:
+          # cp -a build/. docs/
+        fi
+      else
+        echo "No package.json found — skipping build step"
+      fi
+
+  - name: Copy templates -> docs
+    run: |
+      if [ -d templates ]; then
+        cp -a templates/. docs/
+      fi
+
+  - name: Copy static assets -> docs/static
+    run: |
+      mkdir -p docs/static
+      if [ -d static ]; then
+        cp -a static/. docs/static/ || true
+      fi
+
+  - name: Ensure base href for project pages and create 404 fallback
+    env:
+      REPO_NAME: ${{ github.event.repository.name }}
+    run: |
+      if [ -f docs/index.html ]; then
+        if grep -q "<base href=" docs/index.html; then
+          sed -i "s|<base href=\"[^\"]*\"|<base href=\"/${REPO_NAME}/\"|g" docs/index.html
+        else
+          sed -i "0,/<head>/ s|<head>|<head>\n  <base href=\"/${REPO_NAME}/\">|" docs/index.html
+        fi
+        # create 404 fallback for SPA routes
+        cp docs/index.html docs/404.html
+      fi
+
+  - name: Deploy to gh-pages
+    uses: peaceiris/actions-gh-pages@v4
+    with:
+      github_token: ${{ secrets.GITHUB_TOKEN }}
+      publish_dir: ./docs
+      publish_branch: gh-pages
+      # optional: commit message
+      commit_message: chore(docs) - publish to gh-pages
