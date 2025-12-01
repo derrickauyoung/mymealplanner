@@ -41,20 +41,24 @@ from mymealplanner.web_utils import parse_summary_to_structured_data
 app = Flask(__name__, static_folder='.', static_url_path='')
 CORS(
     app,
-    resources={r"/plan": {"origins": "https://derrickauyoung.github.io"}},
+    resources={r"/*": {"origins": "https://derrickauyoung.github.io"}},
     supports_credentials=False,
     allow_headers=["Content-Type"],
     methods=["GET", "POST", "OPTIONS"]
 )
 
-@app.route('/')
+@app.route('/', methods=['GET', 'OPTIONS'])
 def index():
     """Serve the main index.html file."""
+    if request.method == 'OPTIONS':
+        return '', 204
     return send_file('index.html')
 
-@app.route('/<path:path>')
+@app.route('/<path:path>', methods=['GET', 'OPTIONS'])
 def serve_static(path):
     """Serve static files (images, etc.)"""
+    if request.method == 'OPTIONS':
+        return '', 204
     if path.startswith('resources/'):
         return send_from_directory('.', path)
     # For any other path, try to serve as static file
