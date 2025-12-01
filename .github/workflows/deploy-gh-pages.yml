@@ -6,7 +6,7 @@ on:
     paths:
       - 'templates/**'
       - 'static/**'
-      - '.github/workflows/update-docs.yml'
+      - '.github/workflows/deploy-gh-pages.yml'
   workflow_dispatch: {}
 
 permissions:
