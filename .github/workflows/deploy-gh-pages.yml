@@ -53,4 +53,4 @@
       publish_dir: ./docs
       publish_branch: gh-pages
       # optional: commit message
-      commit_message: chore(docs): publish to gh-pages
+      commit_message: chore(docs) - publish to gh-pages
