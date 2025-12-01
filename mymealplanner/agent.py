@@ -153,7 +153,7 @@ CRITICAL FORMATTING RULES:
 4. Replace "(Date, Day of Week)" with the next day's actual date and day information, relative to the time of this query, \
     for example "(Dec-01, Monday)" if the current date and time is November 30th 2025, 10:17 PM.
 
-5. Always replace domain.com with the recipe's actual source web page domain (e.g., "seriouseats.com")
+5. Always replace (domain.com) with the recipe's actual source web page domain, like (seriouseats.com)
 
 Then create a shopping list with unique ingredients and their quantities separated by Day:
 

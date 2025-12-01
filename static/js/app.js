@@ -162,7 +162,12 @@ function ResultsView({ results, onBack, activeTab, setActiveTab }) {
                 {day.day_info && (
                     <p className="day-subtitle">{day.day_info}</p>
                 )}
-                {day.meals && Object.entries(day.meals).map(([mealType, meal]) => (
+                {day.meals && Object.entries(day.meals)
+                    .sort(([a], [b]) => {
+                        const mealOrder = { breakfast: 0, lunch: 1, dinner: 2 };
+                        return (mealOrder[a] ?? 3) - (mealOrder[b] ?? 3);
+                    })
+                    .map(([mealType, meal]) => (
                     <div key={mealType} className="meal-item">
                         <div className="meal-type">{mealType}</div>
                         <div className="meal-title">

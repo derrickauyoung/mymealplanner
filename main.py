@@ -41,7 +41,7 @@ from mymealplanner.parsing import parse_summary_to_structured_data
 app = Flask(__name__,
             static_folder='static',
             static_url_path='/static',
-            template_folder='static/templates')
+            template_folder='templates')
 
 @app.after_request
 def add_cors_headers(response):
