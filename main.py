@@ -38,12 +38,15 @@ from mymealplanner.agent import root_agent
 from mymealplanner.agent_utils import run_session
 from mymealplanner.parsing import parse_summary_to_structured_data
 
+
 app = Flask(__name__,
             static_folder='static',
             static_url_path='/static',
             template_folder='templates')
 
+
 CORS_ALLOWED_ORIGIN = os.environ.get('CORS_ALLOWED_ORIGIN', 'https://derrickauyoung.github.io')
+
 
 @app.after_request
 def add_cors_headers(response):
@@ -55,12 +58,14 @@ def add_cors_headers(response):
     response.headers['Access-Control-Allow-Credentials'] = 'true'
     return response
 
+
 @app.route('/', methods=['GET', 'OPTIONS'])
 def index():
     """Serve the main index.html file."""
     if request.method == "OPTIONS":
         return ('', 204)
     return render_template('index.html')
+
 
 # SPA-safe catch-all: serve real static assets, otherwise return index.html
 @app.route('/', defaults={'path': ''})
@@ -81,19 +86,6 @@ def serve_frontend(path):
     # This fallback is for SPA client-side routes: return index.html
     return render_template('index.html')
 
-@app.route('/<path:path>', methods=['GET', 'OPTIONS'])
-def serve_static(path):
-    """Serve static files (images, etc.)"""
-    if request.method == 'OPTIONS':
-        return '', 204
-    if path.startswith('resources/'):
-        return send_from_directory('.', path)
-    # For any other path, try to serve as static file
-    try:
-        return send_from_directory('.', path)
-    except:
-        # If file doesn't exist, return index.html for SPA routing
-        return send_file('index.html')
 
 @app.route('/health', methods=['GET'])
 def health():
