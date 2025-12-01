@@ -1,0 +1,5 @@
+google-adk
+opentelemetry-instrumentation-google-genai
+flask
+flask-cors
+gunicorn
