@@ -5,8 +5,7 @@ This can be deployed to Cloud Run or Cloud Functions.
 import json
 import os
 import asyncio
-from flask import Flask, request, jsonify, send_from_directory, send_file, render_template
-from flask_cors import CORS
+from flask import Flask, request, jsonify, send_from_directory, render_template
 import vertexai
 import re
 from datetime import datetime, timedelta
@@ -32,23 +31,31 @@ vertexai.init(
 from google.adk.memory import InMemoryMemoryService
 from google.adk.sessions import InMemorySessionService
 from google.adk.runners import Runner
-from google.genai import types
 from mymealplanner.agent import root_agent
 
 from mymealplanner.agent_utils import run_session
 from mymealplanner.parsing import parse_summary_to_structured_data
+
 
 app = Flask(__name__,
             static_folder='static',
             static_url_path='/static',
             template_folder='templates')
 
+
+CORS_ALLOWED_ORIGIN = os.environ.get('CORS_ALLOWED_ORIGIN', 'https://derrickauyoung.github.io')
+
+
 @app.after_request
 def add_cors_headers(response):
-    response.headers["Access-Control-Allow-Origin"] = "https://derrickauyoung.github.io"
-    response.headers["Access-Control-Allow-Methods"] = "GET, POST, OPTIONS"
-    response.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization"
+    # Ensure we return a concrete origin (cannot be '*' when credentials are used)
+    response.headers['Access-Control-Allow-Origin'] = CORS_ALLOWED_ORIGIN
+    response.headers['Vary'] = 'Origin'
+    response.headers['Access-Control-Allow-Methods'] = 'GET,POST,OPTIONS'
+    response.headers['Access-Control-Allow-Headers'] = 'Content-Type,Authorization'
+    response.headers['Access-Control-Allow-Credentials'] = 'true'
     return response
+
 
 @app.route('/', methods=['GET', 'OPTIONS'])
 def index():
@@ -57,23 +64,34 @@ def index():
         return ('', 204)
     return render_template('index.html')
 
-@app.route('/<path:path>', methods=['GET', 'OPTIONS'])
-def serve_static(path):
-    """Serve static files (images, etc.)"""
-    if request.method == 'OPTIONS':
-        return '', 204
-    if path.startswith('resources/'):
-        return send_from_directory('.', path)
-    # For any other path, try to serve as static file
-    try:
-        return send_from_directory('.', path)
-    except:
-        # If file doesn't exist, return index.html for SPA routing
-        return send_file('index.html')
 
-@app.route('/health', methods=['GET'])
+# SPA-safe catch-all: serve real static assets, otherwise return index.html
+@app.route('/path:path', methods=['GET','OPTIONS'])
+def serve_frontend(path):
+    # Preflight
+    if request.method == 'OPTIONS':
+        return ('', 204)
+
+    # If path is explicitly for static assets, serve them from static folder.
+    # - path starting with 'static/' OR path contains a file extension -> treat as static asset
+    if path.startswith(app.static_url_path.lstrip('/')) or os.path.splitext(path)[1]:
+        # normalize path to avoid directory traversal
+        safe_path = path
+        if safe_path.startswith('..') or os.path.isabs(safe_path):
+            return jsonify({"error": "Invalid path"}), 400
+        return send_from_directory(app.static_folder, safe_path)
+
+    # If you have API routes under /api/*, make sure they are registered before this catch-all.
+    # This fallback is for SPA client-side routes: return index.html
+    return render_template('index.html')
+
+
+@app.route('/health', methods=['GET', 'OPTIONS'])
 def health():
     """Health check endpoint."""
+    if request.method == 'OPTIONS':
+        # Preflight request
+        return '', 204
     return jsonify({"status": "healthy"}), 200
 
 
