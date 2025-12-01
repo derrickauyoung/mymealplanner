@@ -39,7 +39,7 @@ from mymealplanner.agent_utils import run_session
 from mymealplanner.web_utils import parse_summary_to_structured_data
 
 app = Flask(__name__, static_folder='.', static_url_path='')
-CORS(app)
+CORS(app, origins=["https://derrickauyoung.github.io"])
 
 @app.route('/')
 def index():
