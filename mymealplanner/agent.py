@@ -109,7 +109,7 @@ SEARCH STRATEGY FOR VARIETY:
 
 9. Ensure the recipe_title contains the domain base address of the recipe source in parentheses.
 
-10. Do not accept "as needed" or "quantity" for ingredient quantities.
+10. Do not accept "(as needed)", "(quantity)", "(quantity not specified)", or similar for ingredient quantities.
 
 Focus on getting diverse, interesting recipe titles from various sources.""",
     tools=[
