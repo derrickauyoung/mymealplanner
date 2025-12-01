@@ -43,11 +43,16 @@ app = Flask(__name__,
             static_url_path='/static',
             template_folder='templates')
 
+CORS_ALLOWED_ORIGIN = os.environ.get('CORS_ALLOWED_ORIGIN', 'https://derrickauyoung.github.io')
+
 @app.after_request
 def add_cors_headers(response):
-    response.headers["Access-Control-Allow-Origin"] = "https://derrickauyoung.github.io"
-    response.headers["Access-Control-Allow-Methods"] = "GET, POST, OPTIONS"
-    response.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization"
+    # Ensure we return a concrete origin (cannot be '*' when credentials are used)
+    response.headers['Access-Control-Allow-Origin'] = CORS_ALLOWED_ORIGIN
+    response.headers['Vary'] = 'Origin'
+    response.headers['Access-Control-Allow-Methods'] = 'GET,POST,PUT,DELETE,OPTIONS'
+    response.headers['Access-Control-Allow-Headers'] = 'Content-Type,Authorization'
+    response.headers['Access-Control-Allow-Credentials'] = 'true'
     return response
 
 @app.route('/', methods=['GET', 'OPTIONS'])
@@ -55,6 +60,25 @@ def index():
     """Serve the main index.html file."""
     if request.method == "OPTIONS":
         return ('', 204)
+    return render_template('index.html')
+
+# SPA-safe catch-all: serve real static assets, otherwise return index.html
+@app.route('/', defaults={'path': ''})
+@app.route('/<path:path>', methods=['GET', 'OPTIONS'])
+def serve_frontend(path):
+    # Preflight
+    if request.method == 'OPTIONS':
+        return ('', 204)
+
+    # If path is explicitly for static assets, serve them from static folder.
+    # - path starting with 'static/' OR path contains a file extension -> treat as static asset
+    if path.startswith(app.static_url_path.lstrip('/')) or os.path.splitext(path)[1]:
+        # normalize path to avoid directory traversal
+        safe_path = path
+        return send_from_directory(app.static_folder, safe_path)
+
+    # If you have API routes under /api/*, make sure they are registered before this catch-all.
+    # This fallback is for SPA client-side routes: return index.html
     return render_template('index.html')
 
 @app.route('/<path:path>', methods=['GET', 'OPTIONS'])
