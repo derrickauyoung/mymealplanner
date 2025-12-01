@@ -50,9 +50,9 @@ def add_cors_headers(response):
 @app.route('/', methods=['GET', 'OPTIONS'])
 def index():
     """Serve the main index.html file."""
-    if request.method == 'OPTIONS':
-        return '', 204
-    return send_file('index.html')
+    if request.method == "OPTIONS":
+        return ('', 204)
+    return jsonify(ok=True)
 
 @app.route('/<path:path>', methods=['GET', 'OPTIONS'])
 def serve_static(path):
