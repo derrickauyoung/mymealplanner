@@ -5,8 +5,7 @@ This can be deployed to Cloud Run or Cloud Functions.
 import json
 import os
 import asyncio
-from flask import Flask, request, jsonify, send_from_directory, send_file, render_template
-from flask_cors import CORS
+from flask import Flask, request, jsonify, send_from_directory, render_template
 import vertexai
 import re
 from datetime import datetime, timedelta
@@ -32,7 +31,6 @@ vertexai.init(
 from google.adk.memory import InMemoryMemoryService
 from google.adk.sessions import InMemorySessionService
 from google.adk.runners import Runner
-from google.genai import types
 from mymealplanner.agent import root_agent
 
 from mymealplanner.agent_utils import run_session
@@ -90,6 +88,9 @@ def serve_frontend(path):
 @app.route('/health', methods=['GET'])
 def health():
     """Health check endpoint."""
+    if request.method == 'OPTIONS':
+        # Preflight request
+        return '', 204
     return jsonify({"status": "healthy"}), 200
 
 
