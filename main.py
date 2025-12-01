@@ -39,7 +39,13 @@ from mymealplanner.agent_utils import run_session
 from mymealplanner.web_utils import parse_summary_to_structured_data
 
 app = Flask(__name__, static_folder='.', static_url_path='')
-CORS(app, origins=["https://derrickauyoung.github.io"])
+CORS(
+    app,
+    resources={r"/plan": {"origins": "https://derrickauyoung.github.io"}},
+    supports_credentials=False,
+    allow_headers=["Content-Type"],
+    methods=["GET", "POST", "OPTIONS"]
+)
 
 @app.route('/')
 def index():
@@ -64,12 +70,16 @@ def health():
     return jsonify({"status": "healthy"}), 200
 
 
-@app.route('/plan', methods=['POST'])
+@app.route('/plan', methods=['POST', 'OPTIONS'])
 def plan_meals():
     """
     Main endpoint to generate a meal plan.
     Expects JSON with 'prompt' field.
     """
+    if request.method == 'OPTIONS':
+        # Preflight request
+        return '', 204
+    
     try:
         data = request.get_json()
         prompt = data.get('prompt', '')
