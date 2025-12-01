@@ -1,5 +1,0 @@
-google-adk
-opentelemetry-instrumentation-google-genai
-flask
-flask-cors
-gunicorn==21.2.0
