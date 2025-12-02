@@ -76,14 +76,15 @@ Some key steps that I discovered along the way were:
 
 - Set up the app to add one random day in the second half of the week where you DON'T have to cook (like a cheat day or eat out/to-go day!)
 - Learn how to turn this into an mobile app for iPhone/iPad so everyone can save precious time
+- Prevent "Event loop is closed" error by refreshing the site properly on subsequent runs
 
 ## Features
 
 - 🤖 Multi-agent AI system using Google's Vertex AI
 - 🍽️ Generates 7-day meal plans with breakfast, lunch, and dinner
-- 📝 Provides detailed ingredient lists organized by day
+- 📝 Provides interactive ingredient check-lists organized by day
 - 🔗 Includes clickable recipe links for easy access
-- 🎨 Beautiful React-based frontend
+- 🎨 React-based frontend
 - ☁️ Deployed on Google Cloud Run
 - 🆓 Free hosting on GitHub Pages
 
@@ -100,7 +101,7 @@ Some key steps that I discovered along the way were:
 - **GitHub Pages** - Static hosting
 - Responsive design with modern UI
 
-## Quick Start
+## Dev Guide
 
 ### Prerequisites
 - Google Cloud account with billing enabled
@@ -178,7 +179,7 @@ python3 -m venv venv
 source venv/bin/activate  # On Windows: venv\Scripts\activate
 
 # Install dependencies
-pip install -r mymealplanner/requirements.txt
+pip install -r requirements.txt
 
 # Set environment variables
 export GOOGLE_CLOUD_PROJECT=your-project-id
