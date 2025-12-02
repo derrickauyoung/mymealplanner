@@ -99,6 +99,35 @@ Your site will be available at: `https://yourusername.github.io/mymealplanner/`
 
 If you encounter CORS issues, ensure your Cloud Run service allows requests from your GitHub Pages domain. The Flask-CORS configuration in `main.py` should handle this, but you may need to update it.
 
+#### NOTE: Cloud Run Service Access
+
+You may still encounter CORS issues if the Google Cloud Run Service is not set to allow unauthenticated requests.
+
+```bash
+gcloud run services add-iam-policy-binding mymealplanner \
+  --region us-central1 \
+  --member="allUsers" \
+  --role="roles/run.invoker"
+```
+
+To test if public access is enabled:
+
+```bash
+curl -I -X OPTIONS https://mymealplanner-${PROJECT_ID}.${CLOUD_LOCATION}.run.app/plan \
+  -H "Origin: https://yourusername.github.io" \
+  -H "Access-Control-Request-Method: POST"
+```
+
+And you should see:
+
+```bash
+HTTP/2 204
+Access-Control-Allow-Origin: https://derrickauyoung.github.io
+Access-Control-Allow-Methods: GET, POST, OPTIONS
+Access-Control-Allow-Headers: Content-Type, Authorization
+```
+
+
 ## Local Testing
 
 ### Test Backend Locally
