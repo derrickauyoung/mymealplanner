@@ -1,6 +1,81 @@
 # My Meal Planner
 
-A meal planner using AI agents to do the difficult work of collecting and summarizing a meal plan and ingredients lists.
+## Problem Statement
+
+Every week, my wife spends hours searching and cross-referencing recipe books and google searches to come up with healthy, in-season, kid-friendly, quick, and delicious meals, gather ingredients lists and get it all ready for the supermarket shop for our family. It is all-consuming, and literally a chore for her. I thought to myself - how can I help her lighten the load with what I learned at the 5-Day AI Agents Intensive Course hosted by Kaggle and Google?
+
+## Why agents?
+
+Agents provide a way to delegate and offload a lot of the tedious work required to generate new meal ideas (3 meals a day for 7 days), gather ingredients lists. If successful, this agent will save hours of time each week.
+
+## What's the overall architecture? 
+
+This started out as a multi-agent solution using a memory bank, with:
+ - one orchestrator root SequentialAgent that will take the user's prompt, like "Make me an organized meal planner summary for the next 7 days, with the supplied criteria config ("healthy", "in-season", "kid-friendly", "quick", "delicious"), and create a meal plan and ingredients checklist."
+- one AgentTool RecipeSearcher agent, which returns a list of 21 recipes for 3 meals a day for the next 7 days, and a list of required ingredients
+- one AgentTool Summarizer agent, which takes a list of recipes and ingredients, and returns a report of the meal plan and ingredients list to the root agent
+
+It ended up being a full-stack web application, using python and flask as its back-end, and React for the front-end, served on github pages on my personal github account.
+
+I also learned how to use my google cloud account, and set up the right authentication and permissions to provide the live agent service to my app, so my wife can use the app from the convenience of her laptop or phone!
+
+## Demo 
+
+- Run through the kaggle notebook to check out my prototype (https://www.kaggle.com/code/derrickauyoung/mymealplannerassistant)
+- Watch the Youtube clip (https://youtu.be/mZZCdhpuhX0)
+- Try out the MyMealPlanner web app (https://derrickauyoung.github.io/mymealplanner/)
+
+## The Build -- Tools and/or Technologies Used
+
+### Prototype
+
+This was certainly a journey! I started by prototyping the agent builds and multi-agent orchestration in my Kaggle notebook (linked below).
+
+### Web App
+
+Once I got the Recipe Search Agent prompt and the Summarizer Agent prompt working well enough in the Kaggle notebook, I decided to spend my last day of the competition seeing how quickly I could create a web app with a React front-end to turn this into a functional app for my wife!
+
+With the limited time I had, I created a github repo (derrickauyoung/mymealplanner) and decided to try out the Cursor App for the first time to do a rough first-pass of my web app.
+
+So I gave it this prompt after pushing my first pass agent.py file and splash logo that I created with Canva up to my github repo:
+
+>Can you analyze my multi-agent file in this workspace, set it up to be deployed onto google cloud, and build an index.html in react that can be served on my github as my free "My Meal Planner" landing page? I want to use the provided resources/MyMealPlanner.png as the splash screen, and a pre-filled prompt text box that I can easily modify.
+
+> The initial prompt text should be: "Can you help me come up with a meal plan for the next 7 days with healthy, in-season, kid-friendly, quick, and delicious meals?". There should be one button the user can press after filling in the prompt (or using the default), with the text: "Plan it!", which should run the agent session. After pressing the button, a modal progress bar should display until the processing is complete, and then bring the user to a new page in react which displays the summary information in 3 easy to navigate pages:
+
+> 1. The summary with titles and links to the recipes, separated by days and meals. 
+
+> 2. The ingredients lists with their required quantities, separated by days
+
+> 3. A list of all recipes and their google search links, separated by days for easy reference
+
+> Once processing is complete, be sure to delete any active agents, to prevent incurring google cloud usage costs.
+
+### Cloud Deploy
+
+I then worked with Cursor, Claude, Co-pilot, and Chat-GPT to get my github page fully functional.
+
+This involved setting up my Google Cloud account and Google Cloud Run to deploy agents onto the cloud.
+
+### Auto Deploy and Web Launch
+
+I also set up an automated Github Pages build and deploy workflow to copy my static css, js, png, and index.html files into my website, I finally got the web app up and running, and it's live on the cloud and ready to use!
+
+https://derrickauyoung.github.io/mymealplanner/
+
+## Key Takeaways and Learnings
+
+Some key steps that I discovered along the way were:
+- The Agent instructions were crucial to getting back accurate and sensible results, and being more detailed in these string blocks were really helpful in telling it what and what NOT to do
+- I tried to get exact links to the recipes themselves, but no matter what I tried, the URLs that the agents provided were all stale or invalid, so I came up with the idea for the app to just provide a google search link with the recipe title, which seems to return the right search result at the top of the list for the most part
+- How to set up my Google Cloud Secret Manager to store my cloud project id and location
+- The gcloud and docker commands to deploy my service to Google Cloud Run
+- The gcloud command to enable public access to unauthenticated users (accessing the public website)
+
+## TODOs
+
+- Set up the app to add one random day in the second half of the week where you DON'T have to cook (like a cheat day or eat out/to-go day!)
+- Learn how to turn this into an mobile app for iPhone/iPad so everyone can save precious time
 
 ## Features
 
