@@ -144,16 +144,43 @@ def plan_meals():
         
         # Run the agent asynchronously and get the response
         # Use asyncio.run() to execute the async function from sync context
-        final_summary = asyncio.run(
-            run_session(
-                auto_runner,
-                session_service,
-                prompt,
-                app_name="agents",
-                user_id="api_user",
-                session_id=f"session_{hash(prompt) % 10000}"  # Unique session ID
+        # Get or create a new event loop for this request
+        try:
+            loop = asyncio.get_event_loop()
+            if loop.is_closed():
+                raise RuntimeError("Loop is closed")
+        except RuntimeError:
+            # Create a new event loop if none exists or it's closed
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+        
+        try:
+            # Run the agent using the event loop
+            final_summary = loop.run_until_complete(
+                run_session(
+                    auto_runner,
+                    session_service,
+                    prompt,
+                    app_name="agents",
+                    user_id="api_user",
+                    session_id=f"session_{hash(prompt) % 10000}"
+                )
             )
-        )
+        except Exception as e:
+            # If there's an error, try with a fresh event loop
+            print(f"Error with current loop, creating fresh one: {e}")
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+            final_summary = loop.run_until_complete(
+                run_session(
+                    auto_runner,
+                    session_service,
+                    prompt,
+                    app_name="agents",
+                    user_id="api_user",
+                    session_id=f"session_{hash(prompt) % 10000}"
+                )
+            )
         
         # Also try to get from session state if available
         # Access the runner's internal session service to get session state

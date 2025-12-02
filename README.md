@@ -87,7 +87,6 @@ Some key steps that I discovered along the way were:
 
 - Set up the app to add one random day in the second half of the week where you DON'T have to cook (like a cheat day or eat out/to-go day!)
 - Learn how to turn this into an mobile app for iPhone/iPad so everyone can save precious time
-- Prevent "Event loop is closed" error by refreshing the site properly on subsequent runs
 
 ## Features
 
