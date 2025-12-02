@@ -17,6 +17,16 @@ This started out as a multi-agent solution using a memory bank, with:
 
 It ended up being a full-stack web application, using python and flask as its back-end, and React for the front-end, served on github pages on my personal github account.
 
+### Backend
+- **Google Cloud Run** - Serverless container hosting
+- **Flask** - REST API framework
+- **Google ADK (Agent Development Kit)** - Multi-agent orchestration
+- **Vertex AI** - LLM backend (Gemini models)
+
+### Frontend
+- **React** (via CDN) - UI framework
+- **GitHub Pages** - Static hosting
+
 I also learned how to use my google cloud account, and set up the right authentication and permissions to provide the live agent service to my app, so my wife can use the app from the convenience of her laptop or phone!
 
 ## Demo 
@@ -68,6 +78,7 @@ https://derrickauyoung.github.io/mymealplanner/
 Some key steps that I discovered along the way were:
 - The Agent instructions were crucial to getting back accurate and sensible results, and being more detailed in these string blocks were really helpful in telling it what and what NOT to do
 - I tried to get exact links to the recipes themselves, but no matter what I tried, the URLs that the agents provided were all stale or invalid, so I came up with the idea for the app to just provide a google search link with the recipe title, which seems to return the right search result at the top of the list for the most part
+- Cursor was a great starting point for connecting the pieces of my agent code and the web app, but it started by dumping all of the files into the root of the repository, so for my own sanity and future maintainability, I decided to ask Claude how to break the files apart into logical directories (py, static, templates). After applying some software surgery, I arrived at the solution now in this repository.
 - How to set up my Google Cloud Secret Manager to store my cloud project id and location
 - The gcloud and docker commands to deploy my service to Google Cloud Run
 - The gcloud command to enable public access to unauthenticated users (accessing the public website)
@@ -87,19 +98,6 @@ Some key steps that I discovered along the way were:
 - 🎨 React-based frontend
 - ☁️ Deployed on Google Cloud Run
 - 🆓 Free hosting on GitHub Pages
-
-## Architecture
-
-### Backend
-- **Google Cloud Run** - Serverless container hosting
-- **Flask** - REST API framework
-- **Google ADK (Agent Development Kit)** - Multi-agent orchestration
-- **Vertex AI** - LLM backend (Gemini models)
-
-### Frontend
-- **React** (via CDN) - UI framework
-- **GitHub Pages** - Static hosting
-- Responsive design with modern UI
 
 ## Dev Guide
 
