@@ -265,7 +265,7 @@ mymealplanner/
 ## Customization
 
 ### Changing the Default Prompt
-Edit the `useState` in `templates/index.html`:
+Edit the `useState` in `static/js/app.js`:
 ```javascript
 const [prompt, setPrompt] = useState("Your custom prompt here");
 ```
