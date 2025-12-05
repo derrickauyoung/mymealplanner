@@ -255,7 +255,6 @@ mymealplanner/
 2. **Backend receives request** and creates an agent session
 3. **Recipe Search Agent** searches for diverse recipes using Google Search
 4. **Summarizer Agent** formats the results into a structured meal plan
-5. **Web Page Builder Agent** prepares the final output
 6. **Backend parses** the summary into structured JSON
 7. **Frontend displays** results in three tabs:
    - **Summary**: Meals organized by day
@@ -266,7 +265,7 @@ mymealplanner/
 ## Customization
 
 ### Changing the Default Prompt
-Edit the `useState` in `index.html`:
+Edit the `useState` in `templates/index.html`:
 ```javascript
 const [prompt, setPrompt] = useState("Your custom prompt here");
 ```
