@@ -19,7 +19,7 @@ source venv/bin/activate
 # Install dependencies
 echo "📥 Installing dependencies..."
 pip install -q --upgrade pip
-pip install -q -r mymealplanner/requirements.txt
+pip install -q -r requirements.txt
 
 # Check for required environment variables
 if [ -z "$GOOGLE_CLOUD_PROJECT" ]; then
