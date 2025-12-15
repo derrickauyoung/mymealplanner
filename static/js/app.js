@@ -14,12 +14,10 @@ function App() {
         if (window.API_URL) return window.API_URL;
         // Auto-detect localhost
         if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-            // return "http://localhost:8080/plan";
-            return "http://localhost:8080/plan-meals";
+            return "http://localhost:8080/plan";
         }
         // Production URL - update this after deployment
-        // return "https://mymealplanner-58703261302.us-central1.run.app/plan";
-        return "https://mymealplanner-58703261302.us-central1.run.app/plan-meals";
+        return "https://mymealplanner-58703261302.us-central1.run.app/plan";
     };
     const API_URL = getApiUrl();
 
@@ -64,14 +62,6 @@ function App() {
     };
 
     if (results) {
-        /*
-        return <ResultsView 
-            results={results} 
-            onBack={() => setResults(null)} 
-            activeTab={activeTab}
-            setActiveTab={setActiveTab}
-        />;
-        */
         return <ResultsPlanDisplay 
             results={results} 
             onBack={() => setResults(null)} 
