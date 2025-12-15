@@ -87,15 +87,16 @@ Some key steps that I discovered along the way were:
 
 - [x] Refactor the Summarizer Agent to a JSON agent that converts data retrieved by the recipe agent into a more robust readable format by the main app - DONE!
 - [x] Add methods to the Recipes tab for each meal for quick reference - DONE!
-- Set up the app to add one random day in the second half of the week where you DON'T have to cook (like a cheat day or eat out/to-go day!)
-- Learn how to turn this into an mobile app for iPhone/iPad so everyone can save precious time
+- [x] Add support for leftovers where possible - DONE!
+- [ ] Set up the app to add one random day in the second half of the week where you DON'T have to cook (like a cheat day or eat out/to-go day!)
+- [ ] Learn how to turn this into an mobile app for iPhone/iPad so everyone can save precious time
 
 ## Features
 
 - 🤖 Multi-agent AI system using Google's Vertex AI
 - 🍽️ Generates 7-day meal plans with breakfast, lunch, and dinner
 - 📝 Provides interactive ingredient check-lists organized by day
-- 🔗 Includes clickable recipe links for easy access
+- 🔗 Includes clickable recipe links and their methods for easy access
 - 🎨 React-based frontend
 - ☁️ Deployed on Google Cloud Run
 - 🆓 Free hosting on GitHub Pages
