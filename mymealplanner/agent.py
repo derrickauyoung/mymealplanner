@@ -249,7 +249,7 @@ RULES:
 - For EACH recipe title, include the domain base address of the recipe source in parentheses, and \
    make sure to only include this text in the title itself (not the full markdown style web link): \
    Example: "Fluffy Pancakes (seriouseats.com)"
-- For EACH recipe title, omit any parentheses from the title that are not surrounding a domain address \
+- For EACH recipe url, omit any parentheses from the title that are not surrounding a domain address \
    , and create a Markdown hyperlink in this format: \
    [Recipe Title (domain.com)](https://www.google.com/search?q=Recipe+Title+recipe)
 - Replace spaces and parentheses in the URL with + symbols \
@@ -258,7 +258,7 @@ RULES:
 - For new recipes: create Google search URL with format `https://www.google.com/search?q=Title+recipe`
 - For leftovers: set url to null
 - For EACH mealtype, always include ingredients as key-value pairs with their quantities
-- For EACH mealtype, always include methods as a string
+- For EACH mealtype, always include methods as a string.
 - Output ONLY the JSON object, without markdown formatting or any other text.
 - Ensure the JSON object is valid and can be parsed by the frontend without errors.""",
             tools=[preload_memory],
