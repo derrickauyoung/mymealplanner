@@ -92,7 +92,7 @@ def health():
     return jsonify({"status": "healthy"}), 200
 
 
-@app.route('/plan-meals', methods=['POST', 'OPTIONS'])
+@app.route('/plan', methods=['POST', 'OPTIONS'])
 def generate_meal_plan():
     """
     Endpoint to generate a meal plan based on the number of days provided.
