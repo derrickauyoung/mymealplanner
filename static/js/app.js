@@ -17,7 +17,7 @@ function App() {
             return "http://localhost:8080/plan";
         }
         // Production URL - update this after deployment
-        return "https://mymealplanner-58703261302.us-central1.run.app/plan";
+        return "https://mymealplanner-yixr6d26xq-uc.a.run.app/plan";
     };
     const API_URL = getApiUrl();
 
