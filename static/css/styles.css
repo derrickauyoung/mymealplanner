@@ -254,6 +254,11 @@ body {
     font-weight: 600;
 }
 
+.meal-text {
+    color: #666;
+    font-style: italic;
+}
+
 .meal-link:hover {
     text-decoration: underline;
 }
@@ -297,7 +302,7 @@ body {
 }
 
 .recipe-item {
-    padding: 15px;
+    padding: 10px;
     margin-bottom: 10px;
     background: white;
     border-radius: 8px;
@@ -312,6 +317,54 @@ body {
 
 .recipe-link:hover {
     text-decoration: underline;
+}
+
+.method-list {
+    list-style: none;
+    counter-reset: step-counter;
+    padding-left: 0;
+    margin: 10px 0;
+}
+
+.method-step {
+    counter-increment: step-counter;
+    margin-bottom: 15px;
+    padding-left: 40px;
+    position: relative;
+    line-height: 1.6;
+}
+
+.method-step::before {
+    content: counter(step-counter);
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 28px;
+    height: 28px;
+    background-color: #2f89b7;
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 0.9rem;
+}
+
+.method-content {
+    margin-top: 15px;
+    padding: 20px;
+    background-color: #f8f9fa;
+    border-radius: 10px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.method-content h5 {
+    margin-top: 0;
+    margin-bottom: 15px;
+    color: #2c3e50;
+    font-size: 1.2rem;
+    font-weight: 600;
 }
 
 .error-message {
