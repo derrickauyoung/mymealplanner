@@ -13,7 +13,7 @@ Agents provide a way to delegate and offload a lot of the tedious work required 
 This started out as a multi-agent solution using a memory bank, with:
  - one orchestrator root SequentialAgent that will take the user's prompt, like "Make me an organized meal planner summary for the next 7 days, with the supplied criteria config ("healthy", "in-season", "kid-friendly", "quick", "delicious"), and create a meal plan and ingredients checklist."
 - one AgentTool RecipeSearcher agent, which returns a list of 21 recipes for 3 meals a day for the next 7 days, and a list of required ingredients
-- one AgentTool Summarizer agent, which takes a list of recipes and ingredients, and returns a report of the meal plan and ingredients list to the root agent
+- one AgentTool JSON agent, which takes the recipe agent's raw data and converts it into a dictionary to supply in JSON format to the root agent
 
 It ended up being a full-stack web application, using python and flask as its back-end, and React for the front-end, served on github pages on my personal github account.
 
@@ -85,6 +85,8 @@ Some key steps that I discovered along the way were:
 
 ## TODOs
 
+- [x] Refactor the Summarizer Agent to a JSON agent that converts data retrieved by the recipe agent into a more robust readable format by the main app - DONE!
+- [x] Add methods to the Recipes tab for each meal for quick reference - DONE!
 - Set up the app to add one random day in the second half of the week where you DON'T have to cook (like a cheat day or eat out/to-go day!)
 - Learn how to turn this into an mobile app for iPhone/iPad so everyone can save precious time
 
@@ -235,7 +237,6 @@ mymealplanner/
 │   ├── __init__.py
 │   ├── agent.py                     # Agent definitions
 │   ├── agent_utils.py               # Helper functions
-│   └── parsing.py                   # Parsing utilities
 │
 ├── static/                          # Static frontend files
 │   ├── css/

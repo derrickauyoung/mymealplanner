@@ -14,10 +14,12 @@ function App() {
         if (window.API_URL) return window.API_URL;
         // Auto-detect localhost
         if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-            return "http://localhost:8080/plan";
+            // return "http://localhost:8080/plan";
+            return "http://localhost:8080/plan-meals";
         }
         // Production URL - update this after deployment
-        return "https://mymealplanner-58703261302.us-central1.run.app/plan";
+        // return "https://mymealplanner-58703261302.us-central1.run.app/plan";
+        return "https://mymealplanner-58703261302.us-central1.run.app/plan-meals";
     };
     const API_URL = getApiUrl();
 
@@ -52,7 +54,7 @@ function App() {
             }
 
             const data = await response.json();
-            setResults(data);
+            setResults(data.structured_data);
         } catch (err) {
             setError(err.message);
         } finally {
@@ -62,12 +64,20 @@ function App() {
     };
 
     if (results) {
+        /*
         return <ResultsView 
             results={results} 
             onBack={() => setResults(null)} 
             activeTab={activeTab}
             setActiveTab={setActiveTab}
         />;
+        */
+        return <ResultsPlanDisplay 
+            results={results} 
+            onBack={() => setResults(null)} 
+            activeTab={activeTab}
+            setActiveTab={setActiveTab}
+        />; 
     }
 
     return (
@@ -125,15 +135,13 @@ function App() {
     );
 }
 
-function ResultsView({ results, onBack, activeTab, setActiveTab }) {
-    const structuredData = results.structured_data || { days: [], ingredients_by_day: [], recipes_by_day: [] };
-
+function ResultsPlanDisplay({ results, onBack, activeTab, setActiveTab }) {
     // Add state to track checked ingredients
     const [checkedIngredients, setCheckedIngredients] = useState({});
 
     // Toggle checkbox handler
-    const toggleIngredient = (dayNumber, ingredientIndex) => {
-        const key = `${dayNumber}-${ingredientIndex}`;
+    const toggleIngredient = (dayIdx, mealType, ingredientIdx) => {
+        const key = `${dayIdx}-${mealType}-${ingredientIdx}`;
         setCheckedIngredients(prev => ({
             ...prev,
             [key]: !prev[key]
@@ -141,26 +149,15 @@ function ResultsView({ results, onBack, activeTab, setActiveTab }) {
     };
 
     const renderSummary = () => {
-        if (!structuredData.days || structuredData.days.length === 0) {
-            // Fallback to raw summary if parsing failed
-            if (results.summary) {
-                return (
-                    <div className="day-section">
-                        <h3 className="day-title">Meal Plan Summary</h3>
-                        <div style={{ whiteSpace: 'pre-wrap', lineHeight: '1.6' }}>
-                            {results.summary}
-                        </div>
-                    </div>
-                );
-            }
+        if (!results.days || results.days.length === 0) {
             return <div>No meal plan data available.</div>;
         }
 
-        return structuredData.days.map((day, idx) => (
+        return results.days.map((day, idx) => (
             <div key={idx} className="day-section">
-                <h3 className="day-title">Day {day.day_number}</h3>
-                {day.day_info && (
-                    <p className="day-subtitle">{day.day_info}</p>
+                <h3 className="day-title">Day {day.dayNumber}</h3>
+                {day.date && (
+                    <p className="day-subtitle">{day.date}</p>
                 )}
                 {day.meals && Object.entries(day.meals)
                     .sort(([a], [b]) => {
@@ -171,14 +168,18 @@ function ResultsView({ results, onBack, activeTab, setActiveTab }) {
                     <div key={mealType} className="meal-item">
                         <div className="meal-type">{mealType}</div>
                         <div className="meal-title">
-                            <a 
-                                href={meal.url} 
-                                target="_blank" 
-                                rel="noopener noreferrer"
-                                className="meal-link"
-                            >
-                                {meal.title}
-                            </a>
+                            {meal.url ? (
+                                <a 
+                                    href={meal.url} 
+                                    target="_blank" 
+                                    rel="noopener noreferrer"
+                                    className="meal-link"
+                                >
+                                    {meal.title}
+                                </a>
+                            ) : (
+                                <span className="meal-text">{meal.title}</span>
+                            )}
                         </div>
                     </div>
                 ))}
@@ -186,69 +187,120 @@ function ResultsView({ results, onBack, activeTab, setActiveTab }) {
         ));
     };
 
-    const renderIngredients = () => {
-        if (!structuredData.ingredients_by_day || structuredData.ingredients_by_day.length === 0) {
-            return <div>No ingredients data available.</div>;
-        }
+const renderIngredients = () => {
+    if (!results.days || results.days.length === 0) {
+        return <div>No meal plan data available.</div>;
+    }
 
-        return structuredData.ingredients_by_day.map((dayData, idx) => (
-            <div key={idx} className="day-section">
-                <h3 className="day-title">Day {dayData.day_number} Ingredients</h3>
-                <ul className="ingredient-list">
-                    {dayData.ingredients.map((ingredient, ingIdx) => {
-                        const checkboxKey = `${dayData.day_number}-${ingIdx}`;
-                        const isChecked = checkedIngredients[checkboxKey] || false;
-                        
-                        return (
-                            <li 
-                                key={ingIdx} 
-                                className={`ingredient-item ${isChecked ? 'checked' : ''}`}
-                                onClick={() => toggleIngredient(dayData.day_number, ingIdx)}
-                                style={{ cursor: 'pointer' }}
-                            >
-                                <input
-                                    type="checkbox"
-                                    checked={isChecked}
-                                    onChange={() => {}} // Controlled by li onClick
-                                    style={{ marginRight: '10px', cursor: 'pointer' }}
-                                />
-                                <span style={{ textDecoration: isChecked ? 'line-through' : 'none' }}>
-                                    {ingredient}
-                                </span>
-                            </li>
-                        );
-                    })}
-                </ul>
-            </div>
-        ));
-    };
+    return results.days.map((day, idx) => (
+        <div key={idx} className="day-section">
+            <h3 className="day-title">Day {day.dayNumber} Ingredients</h3>
+            {day.meals && Object.entries(day.meals)
+                .sort(([a], [b]) => {
+                    const mealOrder = { breakfast: 0, lunch: 1, dinner: 2 };
+                    return (mealOrder[a.toLowerCase()] ?? 3) - (mealOrder[b.toLowerCase()] ?? 3);
+                })
+                .map(([mealType, meal]) => {
+                // Check if meal has ingredients
+                if (!meal.ingredients || Object.keys(meal.ingredients).length === 0) {
+                    return null;
+                }
+                
+                return (
+                    <div key={mealType}>
+                        <h4 className="meal-type">{mealType}</h4>
+                        <ul className="ingredient-list">
+                            {Object.entries(meal.ingredients).map(([ingredient, quantity], ingIdx) => {
+                                const checkboxKey = `${idx}-${mealType}-${ingIdx}`;
+                                const isChecked = checkedIngredients[checkboxKey] || false;
+                                
+                                return (
+                                    <li 
+                                        key={ingIdx} 
+                                        className="ingredient-item"
+                                        onClick={() => toggleIngredient(idx, mealType, ingIdx)}
+                                        style={{ cursor: 'pointer' }}
+                                    >
+                                        <input 
+                                            type="checkbox" 
+                                            checked={isChecked}
+                                            onChange={() => {}}
+                                            style={{ marginRight: '10px', cursor: 'pointer' }}
+                                        />
+                                        <span style={{ 
+                                            textDecoration: isChecked ? 'line-through' : 'none',
+                                            color: isChecked ? '#999' : 'inherit'
+                                        }}>
+                                            {ingredient} ({quantity || 'to taste'})
+                                        </span>
+                                    </li>
+                                );
+                            })}
+                        </ul>
+                    </div>
+                );
+            })}
+        </div>
+    ));
+};
 
     const renderRecipes = () => {
-        if (!structuredData.recipes_by_day || structuredData.recipes_by_day.length === 0) {
-            return <div>No recipes data available.</div>;
+        if (!results.days || results.days.length === 0) {
+            return <div>No meal plan data available.</div>;
         }
 
-        return structuredData.recipes_by_day.map((dayData, idx) => (
+        return results.days.map((day, idx) => (
             <div key={idx} className="day-section">
-                <h3 className="day-title">Day {dayData.day_number} Recipes</h3>
-                {dayData.recipes.map((recipe, recipeIdx) => (
-                    <div key={recipeIdx} className="recipe-item">
-                        <a 
-                            href={recipe.url} 
-                            target="_blank" 
-                            rel="noopener noreferrer"
-                            className="recipe-link"
-                        >
-                            {recipe.title}
-                        </a>
-                    </div>
-                ))}
+                <h3 className="day-title">Day {day.dayNumber} Methods</h3>
+                {day.meals && Object.entries(day.meals)
+                .sort(([a], [b]) => {
+                    const mealOrder = { breakfast: 0, lunch: 1, dinner: 2 };
+                    return (mealOrder[a.toLowerCase()] ?? 3) - (mealOrder[b.toLowerCase()] ?? 3);
+                })
+                .map(([mealType, meal]) => {
+                    // Check if meal has methods
+                    if (!meal.method) {
+                        return null;
+                    }
+                    
+                    return (
+                        <div key={mealType}>
+                            <h4 className="meal-type">{mealType}</h4>
+                                {meal.url && (
+                                    <a 
+                                        href={meal.url} 
+                                        target="_blank" 
+                                        rel="noopener noreferrer"
+                                        className="recipe-link"
+                                    >
+                                        {meal.title}
+                                    </a>
+                                )}
+                                {meal.method && (
+                                    <div className="recipe-item">
+                                        <h5>Method:</h5>
+                                        <ol className="method-list">
+                                            {meal.method
+                                                .split('.')
+                                                .map(sentence => sentence.trim())
+                                                .filter(sentence => sentence.length > 0)
+                                                .map((sentence, stepIdx) => (
+                                                    <li key={stepIdx} className="method-step">
+                                                        {sentence}.
+                                                    </li>
+                                                ))}
+                                        </ol>
+                                    </div>
+                                )}
+                        </div>
+                    );
+                })}
             </div>
         ));
-    };
+    }
 
-    return (
-        <div className="container">
+  return (
+            <div className="container">
             <div className="results-container">
                 <div className="results-header">
                     <h2 className="results-title">Your Meal Plan</h2>

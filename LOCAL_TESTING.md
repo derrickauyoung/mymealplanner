@@ -54,7 +54,7 @@ run_local.bat
 
 2. **Install dependencies:**
    ```bash
-   pip install -r mymealplanner/requirements.txt
+   pip install -r requirements.txt
    ```
 
 3. **Set environment variables:**
@@ -156,7 +156,7 @@ source venv/bin/activate  # Mac/Linux
 venv\Scripts\activate     # Windows
 
 # Reinstall dependencies
-pip install -r mymealplanner/requirements.txt
+pip install -r requirements.txt
 ```
 
 ### Issue: CORS errors in browser
@@ -202,7 +202,7 @@ The Flask app already has CORS enabled. If you still see errors:
 
 Once local testing works:
 1. Test with different prompts
-2. Verify the parsing works correctly
+2. Verify the json data is generated and passed correctly
 3. Check that all three tabs (Summary, Ingredients, Recipes) display properly
 4. Deploy to Google Cloud Run when ready
 

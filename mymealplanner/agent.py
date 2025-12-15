@@ -1,23 +1,8 @@
 import vertexai
 import os
 
-# Initialize Vertex AI - use get() with defaults to avoid errors if not set
-# The actual values will be set in main.py before agents are used
-project = os.environ.get("GOOGLE_CLOUD_PROJECT")
-location = os.environ.get("GOOGLE_CLOUD_LOCATION", "us-central1")
-
-# Initialize Vertex AI if project is available
-# Note: Models will also need explicit vertexai/project/location parameters
-if project:
-    vertexai.init(
-        project=project,
-        location=location,
-    )
-else:
-    # Set defaults to avoid None errors (will be overridden in main.py)
-    project = os.environ.get("GOOGLE_CLOUD_PROJECT", "")
-    location = os.environ.get("GOOGLE_CLOUD_LOCATION", "us-central1")
-
+# Don't initialize Vertex AI here - let main.py handle it
+# Just get the values for later use
 from google.adk.agents import Agent, SequentialAgent
 from google.adk.tools import preload_memory
 from google.adk.tools import google_search
@@ -25,20 +10,53 @@ from google.genai import types, Client
 from google.adk.models.google_llm import Gemini
 
 
-# Create configured client
-_configured_client = Client(
-    vertexai=True,
-    project=project,
-    location=location
-)
+# Create configured client lazily to avoid issues at import time
+_configured_client = None
+
+def get_configured_client():
+    """Get or create the configured client with current env vars."""
+    global _configured_client
+    if _configured_client is None:
+        project = os.environ.get("GOOGLE_CLOUD_PROJECT")
+        location = os.environ.get("GOOGLE_CLOUD_LOCATION", "us-central1")
+        
+        if not project:
+            raise ValueError(
+                "GOOGLE_CLOUD_PROJECT environment variable must be set before using agents"
+            )
+        
+        _configured_client = Client(
+            vertexai=True,
+            project=project,
+            location=location
+        )
+    return _configured_client
 
 class ConfiguredGemini(Gemini):
     """Gemini model that uses our pre-configured client."""
+    def __init__(self, *args, **kwargs):
+        # Extract our custom params before calling parent
+        custom_model = kwargs.pop('model', 'gemini-2.5-flash-lite')
+        custom_retry = kwargs.pop('retry_options', None)
+        # Call parent with minimal params
+        super().__init__(model=custom_model)
+        # Store retry options if provided
+        if custom_retry:
+            self.retry_options = custom_retry
     
     @property
     def api_client(self):
-        """Override to return our configured client."""
-        return _configured_client
+        """Lazily create and return configured client."""
+        return get_configured_client()
+
+# Create a function to build agents with proper config
+def create_gemini_model(model_name="gemini-2.5-flash-lite"):
+    """Create a Gemini model with proper Vertex AI configuration."""
+    # Use our custom ConfiguredGemini that handles client creation lazily
+    return ConfiguredGemini(
+        model=model_name,
+        retry_options=retry_config,
+    )
 
 retry_config = types.HttpRetryOptions(
     attempts=5,  # Maximum retry attempts
@@ -55,14 +73,59 @@ async def auto_save_to_memory(callback_context):
     )
 
 
-# Recipe Search Agent: Its job is to use the google_search tool and present findings.
-recipe_search_agent = Agent(
-    name="RecipeSearchAgent",
-    model=ConfiguredGemini(
-        model="gemini-2.5-flash-lite",
-        retry_options=retry_config,
-    ),
+# Agent cache for lazy loading
+_agents_cache = {}
+
+def _get_recipe_search_agent():
+    """Get or create the recipe search agent lazily."""
+    if 'recipe_search_agent' not in _agents_cache:
+        _agents_cache['recipe_search_agent'] = Agent(
+            name="RecipeSearchAgent",
+            model=create_gemini_model(),
     instruction="""You are a specialized recipe search agent focused on finding DIVERSE recipes.
+MEAL PLANNING STRATEGY:
+1. For DAY 1 ONLY:
+   - BREAKFAST: Search for a new recipe
+   - LUNCH: Search for a new recipe (there are no leftovers yet!)
+   - DINNER: Search for a new recipe
+
+   DAY 1 ENTRY: Create entries like this:
+    {
+            "recipe_title": "Fluffy Pancakes",
+            "ingredients": {"Buttermilk": "1 cup", "All-purpose flour": "2 cups"},
+            "method": "Step 1: mix ingredients in bowl. Step 2: ...",
+    }
+
+2. For DAY 2 and beyond:
+   - BREAKFAST: Search for a new recipe
+   - LUNCH: Use "Leftovers from Day [X-1] Dinner: [Previous Dinner Recipe Name]"
+   - DINNER: Search for a new recipe
+
+3. LEFTOVER ENTRIES (Day 2+): Create entries like this WITHOUT searching:
+   {
+       "recipe_title": "Leftovers from Day 1 Dinner: [Exact Dinner Recipe Name]",
+       "ingredients": {},
+       "method": "",
+   }
+
+4. NEW RECIPE SEARCHES: Rotate between these sites for variety:
+   - allrecipes.com, foodnetwork.com, simplyrecipes.com, budgetbytes.com, 
+     minimalistbaker.com, seriouseats.com, bonappetit.com
+
+5. Example output structure for 3 days (9 meals total: 6 searched, 2 leftovers):
+[
+    {"recipe_title": "Fluffy Pancakes", "ingredients": {}, "method": "Step 1: mix ingredients in bowl. Step 2: ..."},  // Day 1 Breakfast
+    {"recipe_title": "Mediterranean Chickpea Salad", "ingredients": {}, "method": "Step 1: mix ingredients in bowl. Step 2: ..."},  // Day 1 Lunch (NEW)
+    {"recipe_title": "Garlic Herb Roasted Chicken", "ingredients": {}, "method": "Step 1: mix ingredients in bowl. Step 2: ..."},  // Day 1 Dinner
+    
+    {"recipe_title": "Berry Smoothie Bowl", "ingredients": {}, "method": "Step 1: mix ingredients in bowl. Step 2: ..."},  // Day 2 Breakfast
+    {"recipe_title": "Leftovers from Day 1 Dinner: Garlic Herb Roasted Chicken", "ingredients": {}, "method": ""},  // Day 2 Lunch
+    {"recipe_title": "Vegetarian Pasta Primavera", "ingredients": {}, "method": "Step 1: mix ingredients in bowl. Step 2: ..."},  // Day 2 Dinner
+    
+    {"recipe_title": "Avocado Toast", "ingredients": {}, "method": "Step 1: mix ingredients in bowl. Step 2: ..."},  // Day 3 Breakfast
+    {"recipe_title": "Leftovers from Day 2 Dinner: Vegetarian Pasta Primavera", "ingredients": {}, "method": ""},  // Day 3 Lunch
+    {"recipe_title": "Beef Stir Fry", "ingredients": {}, "method": "Step 1: mix ingredients in bowl. Step 2: ..."}  // Day 3 Dinner
+]
 
 SEARCH STRATEGY FOR VARIETY:
 1. Rotate between these reliable recipe sites for different meals:
@@ -111,91 +174,115 @@ SEARCH STRATEGY FOR VARIETY:
 
 10. Do not accept "(as needed)", "(quantity)", "(quantity not specified)", or similar for ingredient quantities.
 
-Focus on getting diverse, interesting recipe titles from various sources.""",
+CRITICAL: 
+- Day 1 lunch MUST be a real searched recipe
+- Day 2+ lunches should be leftover references
+- Include ALL meals in your output
+- Focus on getting diverse, interesting recipe titles from various sources.""",
     tools=[
         google_search,
         preload_memory,
     ],
-    after_agent_callback=auto_save_to_memory,  # Saves after each turn!
-    output_key="recipes", # The result of this agent will be stored in the session state with this key.
-)
+            after_agent_callback=auto_save_to_memory,  # Saves after each turn!
+            output_key="recipes", # The result of this agent will be stored in the session state with this key.
+        )
+    return _agents_cache['recipe_search_agent']
 
-print("✅ recipe_search_agent created.")
+recipe_search_agent = None  # Will be lazily loaded
 
-# Meal Plan Summarizer Agent: Its job is to summarize the text it receives.
-summarizer_agent = Agent(
-    name="SummarizerAgent",
-    model=ConfiguredGemini(
-        model="gemini-2.5-flash-lite",
-        retry_options=retry_config,
-    ),
-    # The instruction is modified to generate a google sheet with recipe and ingredients information.
-    instruction="""Read the provided recipe findings: {recipes}
+def _get_json_agent():
+    """Get or create the JSON agent lazily."""
+    if 'json_agent' not in _agents_cache:
+        _agents_cache['json_agent'] = Agent(
+            name="JSONAgent",
+            model=create_gemini_model(),
+    instruction="""You are a meal plan data formatter. Read the recipe data from {recipes} and output ONLY a JSON object.
 
-Combine the data into a final summary with this format:
+RECIPE DATA: {recipes}
 
-DAY #1 (Date, Day of Week):
+YOUR TASK:
+Convert the recipe list into a structured JSON object for the frontend:
+{
+  "days": [
+    {
+      "dayNumber": 1,
+      "date": "Dec 12, 2024",
+      "meals": {
+        "breakfast": {
+          "title": "Fluffy Pancakes (seriouseats.com)",
+          "url": "https://www.google.com/search?q=Fluffy+Pancakes+recipe",
+          "ingredients": {"Buttermilk": "1 cup", "All-purpose flour": "2 cups"},
+          "method": "Step 1: mix ingredients in bowl. Step 2: ...",
+        },
+        "lunch": {
+          "title": "Greek Salad (seriouseats.com)",
+          "url": "https://www.google.com/search?q=Greek+Salad+recipe",
+          "ingredients": {"Tomato": "1", "Cucumber": "1"},
+          "method": "Step 1: mix ingredients in bowl. Step 2: ...",
+        },
+        "dinner": {
+          "title": "Roasted Chicken (seriouseats.com)",
+          "url": "https://www.google.com/search?q=Roasted+Chicken+recipe",
+          "ingredients": {"Chicken": "1", "Herbs": "1 cup"},
+          "method": "Step 1: mix ingredients in bowl. Step 2: ...",
+        }
+      }
+    },
+    {
+      "dayNumber": 2,
+      "meals": {
+        "breakfast": {...},
+        "lunch": {
+          "title": "Leftovers from Day 1 Dinner: Roasted Chicken",
+          "url": null,
+          "method": "",
+          "ingredients": {},
+        },
+        "dinner": {...}
+      }
+    }
+  ]
+}
 
-BREAKFAST: [Recipe Title (domain.com)](https://www.google.com/search?q=Recipe+Title+recipe)
-LUNCH: [Recipe Title (domain.com)](https://www.google.com/search?q=Recipe+Title+recipe)
-DINNER: [Recipe Title (domain.com)](https://www.google.com/search?q=Recipe+Title+recipe)
-
-CRITICAL FORMATTING RULES:
-1. For EACH recipe title, omit any parentheses from the title that are not surrounding a domain address \
-   , and create a Markdown hyperlink in this format:
+RULES:
+- Organize recipes into days (3 meals per day)
+- For EACH recipe title, include the domain base address of the recipe source in parentheses, and \
+   make sure to only include this text in the title itself (not the full markdown style web link): \
+   Example: "Fluffy Pancakes (seriouseats.com)"
+- For EACH recipe title, omit any parentheses from the title that are not surrounding a domain address \
+   , and create a Markdown hyperlink in this format: \
    [Recipe Title (domain.com)](https://www.google.com/search?q=Recipe+Title+recipe)
-   
-2. Replace spaces in the URL with + symbols
+- Replace spaces and parentheses in the URL with + symbols \
    Example: "Fluffy Pancakes (seriouseats.com)" becomes "Fluffy+Pancakes+seriouseats.com+recipe"
-   
-3. Always add "+recipe" to the end of the search query
+- Always add "+recipe" to the end of the search query
+- For new recipes: create Google search URL with format `https://www.google.com/search?q=Title+recipe`
+- For leftovers: set url to null
+- For EACH mealtype, always include ingredients as key-value pairs with their quantities
+- For EACH mealtype, always include methods as a string
+- Output ONLY the JSON object, without markdown formatting or any other text.
+- Ensure the JSON object is valid and can be parsed by the frontend without errors.""",
+            tools=[preload_memory],
+            output_key="meal_plan_data",
+        )
+    return _agents_cache['json_agent']
 
-4. Replace "(Date, Day of Week)" with the next day's actual date and day information, relative to the time of this query, \
-    for example "(Dec-01, Monday)" if the current date and time is November 30th 2025, 10:17 PM.
-
-5. Always replace (domain.com) with the recipe's actual source web page domain, like (seriouseats.com)
-
-Then create a shopping list with unique ingredients and their quantities separated by Day:
-
-DAY #1 INGREDIENTS:
-- ingredient_name 1 (ingredient_quantity)
-- ingredient_name 2 (ingredient_quantity)
-
-DAY #2 INGREDIENTS:
-- ingredient_name 1 (ingredient_quantity)
-- ingredient_name 2 (ingredient_quantity)
-
-Finally, provide a clickable recipe links section:
-
-RECIPE LINKS:
-
-DAY #1:
-- [Recipe Title 1 (domain.com)](https://www.google.com/search?q=Recipe+Title+1+recipe)
-- [Recipe Title 2 (domain.com)](https://www.google.com/search?q=Recipe+Title+2+recipe)
-- [Recipe Title 3 (domain.com)](https://www.google.com/search?q=Recipe+Title+3+recipe)
-
-DAY #2:
-- [Recipe Title 1](https://www.google.com/search?q=Recipe+Title+1+recipe)
-
-Make sure ALL recipe titles are clickable Google search links.""",
-    tools=[preload_memory],
-    output_key="final_summary",
-)
-
-print("✅ summarizer_agent created.")
-
+json_agent = None  # Will be lazily loaded
 
 # Root Agent: Orchestrates the workflow by calling the sub-agents as tools.
-root_agent = SequentialAgent(
-    name="MyMealPlanAgent",
-    # This instruction tells the root agent HOW to use its tools (which are the other agents).
-    description="""You are a friendly meal planner assistant. Your goal is to answer the user's query by orchestrating a workflow. \
+def _get_root_agent():
+    """Get or create the root agent lazily."""
+    if 'root_agent' not in _agents_cache:
+        _agents_cache['root_agent'] = SequentialAgent(
+            name="MyMealPlanAgent",
+            # This instruction tells the root agent HOW to use its tools (which are the other agents).
+            description="""You are a friendly meal planner assistant. Your goal is to answer the user's query by orchestrating a workflow. \
 1. First, you MUST call the `RecipeSearchAgent` tool to find recipes, ingredients and URLs based on the prompt provided by the user. \
 2. Store the recipes result from RecipeSearchAgent. \
-3. Next, you MUST call the `SummarizerAgent` tool and pass it the recipes data you received from RecipeSearchAgent. \
-5. Finally, present the final_summary back to the application as your response.""",
-    sub_agents=[recipe_search_agent, summarizer_agent],
-    after_agent_callback=auto_save_to_memory,  # Saves after each turn!
-)
+3. Next, you MUST call the `JSONAgent` tool and pass it the recipes data you received from RecipeSearchAgent. \
+5. Finally, present the meal_plan_data back to the application as your response.""",
+            sub_agents=[_get_recipe_search_agent(), _get_json_agent()],
+            after_agent_callback=auto_save_to_memory,  # Saves after each turn!
+        )
+    return _agents_cache['root_agent']
 
-print("✅ root_agent created.")
+root_agent = None  # Will be lazily loaded

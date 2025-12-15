@@ -134,7 +134,7 @@ Access-Control-Allow-Headers: Content-Type, Authorization
 
 ```bash
 # Install dependencies
-pip install -r mymealplanner/requirements.txt
+pip install -r requirements.txt
 
 # Set environment variables
 export GOOGLE_CLOUD_PROJECT=your-project-id
@@ -176,7 +176,4 @@ Then open `http://localhost:8000` in your browser.
 - Check that your project has billing enabled
 - Ensure environment variables are set correctly
 
-### Parsing Errors
-- The summary parser may need adjustment based on actual agent output
-- Check the `parse_summary_to_structured_data` function in `main.py`
 

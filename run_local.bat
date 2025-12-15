@@ -18,7 +18,7 @@ call venv\Scripts\activate.bat
 REM Install dependencies
 echo 📥 Installing dependencies...
 pip install -q --upgrade pip
-pip install -q -r mymealplanner\requirements.txt
+pip install -q -r requirements.txt
 
 REM Check for required environment variables
 if "%GOOGLE_CLOUD_PROJECT%"=="" (

@@ -7,8 +7,6 @@ import os
 import asyncio
 from flask import Flask, request, jsonify, send_from_directory, render_template
 import vertexai
-import re
-from datetime import datetime, timedelta
 
 # Initialize Vertex AI FIRST, before importing agents
 # This ensures models have the correct configuration
@@ -31,10 +29,9 @@ vertexai.init(
 from google.adk.memory import InMemoryMemoryService
 from google.adk.sessions import InMemorySessionService
 from google.adk.runners import Runner
-from mymealplanner.agent import root_agent
+from mymealplanner.agent import _get_root_agent
 
 from mymealplanner.agent_utils import run_session
-from mymealplanner.parsing import parse_summary_to_structured_data
 
 
 app = Flask(__name__,
@@ -95,25 +92,24 @@ def health():
     return jsonify({"status": "healthy"}), 200
 
 
-@app.route('/plan', methods=['POST', 'OPTIONS'])
-def plan_meals():
+@app.route('/plan-meals', methods=['POST', 'OPTIONS'])
+def generate_meal_plan():
     """
-    Main endpoint to generate a meal plan.
-    Expects JSON with 'prompt' field.
+    Endpoint to generate a meal plan based on the number of days provided.
+    Expects JSON with 'days' field.
     """
     if request.method == 'OPTIONS':
         # Preflight request
         return '', 204
     
     try:
-        data = request.get_json()
+        data = request.json
         prompt = data.get('prompt', '')
         
         if not prompt:
             return jsonify({"error": "Prompt is required"}), 400
         
         # Ensure Vertex AI is properly initialized
-        # Re-initialize to make sure it's set up correctly
         project = os.environ.get("GOOGLE_CLOUD_PROJECT")
         location = os.environ.get("GOOGLE_CLOUD_LOCATION", "us-central1")
         
@@ -122,108 +118,76 @@ def plan_meals():
                 "error": "GOOGLE_CLOUD_PROJECT environment variable is required"
             }), 500
         
-        # Re-initialize Vertex AI to ensure it's properly configured
         try:
             vertexai.init(project=project, location=location)
         except Exception as e:
             print(f"Warning: Vertex AI already initialized: {e}")
         
-        # Create runner with session and memory services
-        # The Runner will use the agents' configured models (which are set to use Vertex AI)
-        session_service = InMemorySessionService()
-        memory_service = InMemoryMemoryService()
-        
-        auto_runner = Runner(
-            agent=root_agent,
-            app_name="agents",
-            session_service=session_service,
-            memory_service=memory_service,
-        )
-        print("Auto runner created.")
         print(f"Using Vertex AI with project: {project}, location: {location}")
-        
-        # Run the agent asynchronously and get the response
-        # Use asyncio.run() to execute the async function from sync context
-        # Get or create a new event loop for this request
-        try:
-            loop = asyncio.get_event_loop()
-            if loop.is_closed():
-                raise RuntimeError("Loop is closed")
-        except RuntimeError:
-            # Create a new event loop if none exists or it's closed
-            loop = asyncio.new_event_loop()
-            asyncio.set_event_loop(loop)
-        
-        try:
-            # Run the agent using the event loop
-            final_summary = loop.run_until_complete(
-                run_session(
-                    auto_runner,
-                    session_service,
-                    prompt,
-                    app_name="agents",
-                    user_id="api_user",
-                    session_id=f"session_{hash(prompt) % 10000}"
-                )
+                
+        # Define async function that creates everything fresh
+        async def run_plan():
+            # Create NEW session and memory services for THIS request
+            session_service = InMemorySessionService()
+            memory_service = InMemoryMemoryService()
+            
+            # Create NEW runner for THIS request
+            auto_runner = Runner(
+                agent=_get_root_agent(),
+                app_name="agents",
+                session_service=session_service,
+                memory_service=memory_service,
             )
-        except Exception as e:
-            # If there's an error, try with a fresh event loop
-            print(f"Error with current loop, creating fresh one: {e}")
-            loop = asyncio.new_event_loop()
-            asyncio.set_event_loop(loop)
-            final_summary = loop.run_until_complete(
-                run_session(
-                    auto_runner,
-                    session_service,
-                    prompt,
-                    app_name="agents",
-                    user_id="api_user",
-                    session_id=f"session_{hash(prompt) % 10000}"
-                )
+            
+            # Run the session
+            return await run_session(
+                auto_runner,
+                session_service,
+                prompt,
+                app_name="agents",
+                user_id="api_user",
+                session_id=f"session_{hash(prompt) % 10000}"
             )
         
-        # Also try to get from session state if available
-        # Access the runner's internal session service to get session state
-        try:
-            # InMemoryRunner has internal session service
-            # We can access the last session through the runner
-            if hasattr(auto_runner, '_session_service'):
-                sessions = auto_runner._session_service.list_sessions()
-                if sessions:
-                    last_session = sessions[-1]
-                    session_summary = last_session.state.get("final_summary", "")
-                    if session_summary:
-                        final_summary = session_summary
-        except Exception as e:
-            print(f"Note: Could not access session state: {e}")
+        # Run with asyncio.run() which creates a fresh event loop
+        structured_data = asyncio.run(run_plan())
         
-        # Right after getting final_summary
-        print("=" * 80)
-        print("RAW SUMMARY OUTPUT:")
-        print(final_summary)
-        print("=" * 80)
+        # Parse if it's a string
+        if structured_data and isinstance(structured_data, str):
+            import json
+            import re
+            
+            # Remove markdown code fences if present
+            cleaned_data = structured_data.strip()
+            
+            # Remove ```json and ``` if present
+            if cleaned_data.startswith('```'):
+                # Remove opening fence (```json or just ```)
+                cleaned_data = re.sub(r'^```(?:json)?\s*\n', '', cleaned_data)
+                # Remove closing fence
+                cleaned_data = re.sub(r'\n```\s*$', '', cleaned_data)
+                cleaned_data = cleaned_data.strip()
+            try:
+                structured_data = json.loads(cleaned_data)
 
-        # Parse the summary into structured data
-        structured_data = parse_summary_to_structured_data(final_summary)
+            except json.JSONDecodeError as e:
+                print(f"❌ JSON decode error: {e}")
+                print(f"Raw string: {cleaned_data[:500]}")  # Print first 500 chars
+                return jsonify({
+                    "error": "Invalid JSON from agent",
+                    "raw_data": cleaned_data[:1000]
+                }), 500
 
-        print("=" * 80)
-        print("PARSED STRUCTURED DATA:")
-        print(json.dumps(structured_data, indent=2))
-        print("=" * 80)
-        
-        # Clean up - InMemoryRunner manages sessions internally
-        # Sessions are automatically cleaned up when the runner goes out of scope
-        
         return jsonify({
-            "success": True,
-            "summary": final_summary,
+            "status": "success",
+            "summary": structured_data,
             "structured_data": structured_data
         }), 200
         
     except Exception as e:
         import traceback
         error_details = traceback.format_exc()
-        print(f"Error in plan_meals: {error_details}")
+        print(f"Error in generate_meal_plan: {error_details}")
         return jsonify({
             "error": str(e),
             "details": error_details
